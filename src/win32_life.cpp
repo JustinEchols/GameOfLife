@@ -390,15 +390,26 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 				{
 					app_controller_input *NewKeyboardController = &NewInput->Controller;
 					app_controller_input *OldKeyboardController = &OldInput->Controller;
-					app_controller_input ZeroController = {}; 
+					app_controller_input EmptyKeyboardController = {}; 
+					*NewKeyboardController = EmptyKeyboardController;
 
 					app_mouse_input *NewMouseController = &NewInput->MouseController;
 					app_mouse_input *OldMouseController = &OldInput->MouseController;
 					app_mouse_input EmptyMouseController = {}; 
 
-					*NewKeyboardController = ZeroController;
+					// NOTE(Justin): The mouse's cursor position needs to
+					// persist from frame to frame. If the curosr position is
+					// cleared each time, the position jumps back and forth from
+					// (0, 0) to (x, y) which is not desired. Therefore when
+					// when constructing new moues input, set the new input to
+					// the empty controller, then set the new position to the
+					// old position.
+
 					*NewMouseController = EmptyMouseController;
 					NewMouseController->Pos = OldMouseController->Pos;
+
+					// TODO(Justin): Collapse keyboard/mouse input into one
+					// loop.
 					for(u32 button_index = 0;
 							button_index < ARRAY_COUNT(NewKeyboardController->Buttons);
 								button_index++)
