@@ -43,9 +43,6 @@ typedef float		f32;
 #define local_persist	static
 #define global_variable static
 
-#define TRUE 1
-#define FALSE 0
-
 #define ABS(x) (((x) > 0) ? (x) : -(x))
 #define MIN(a, b) ((a < b) ? (a) : (b))
 #define MAX(a, b) ((a < b) ? (b) : (a))
@@ -71,17 +68,6 @@ typedef struct
 
 } back_buffer;
 
-enum 
-{
-	KEY_W,
-	KEY_A,
-	KEY_S,
-	KEY_D,
-	KEY_SPACE,
-
-	KEY_COUNT
-};
-
 typedef struct
 {
 	u32 half_transition_count;
@@ -106,6 +92,8 @@ typedef struct
 		};
 	};
 } app_controller_input;
+
+
 
 typedef struct
 {
