@@ -607,6 +607,9 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		Pos = GridMiddle + 3 * Offset;
 		grid_create_traffic_light(Grid, Pos);
 
+		Pos = GridMiddle + 4 * Offset;
+		grid_create_glider(Grid, Pos);
+
 		AppMemory->is_initialized = true;
 	}
 
@@ -686,4 +689,30 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 			grid_cell_state_set(Grid, CellPos, cell_state);
 		}
 	}
+
+	if(AppInput->MouseController.Left.ended_down)
+	{
+		int mouse_x = AppInput->MouseController.Pos.x;
+		int mouse_y = AppInput->MouseController.Pos.y;
+
+		v2i Offset = V2I(10, 10);
+		v2i Min = V2I(mouse_x, mouse_y);
+		v2i Max = Min + V2I(10, 10);
+		Min = Min + -0.5f * Offset;
+
+		rectangle_draw(BackBuffer, Min, Max, 1.0f, 0.0f, 0.0f);
+	}
+	if(AppInput->MouseController.Right.ended_down)
+	{
+		int mouse_x = AppInput->MouseController.Pos.x;
+		int mouse_y = AppInput->MouseController.Pos.y;
+
+		v2i Offset = V2I(10, 10);
+		v2i Min = V2I(mouse_x, mouse_y);
+		v2i Max = Min + V2I(10, 10);
+		Min = Min + -0.5f * Offset;
+
+		rectangle_draw(BackBuffer, Min, Max, 1.0f, 1.0f, 0.0f);
+	}
+
 }

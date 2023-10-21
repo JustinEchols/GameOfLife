@@ -76,6 +76,28 @@ typedef struct
 
 typedef struct
 {
+	int x;
+	int y;
+} mouse_pos;
+
+
+// TODO(Justin): Use u8 and bitwise ops to keep track of and update button states.
+typedef struct
+{
+	union
+	{
+		app_button_state Buttons[2];
+		struct
+		{
+			app_button_state Left;
+			app_button_state Right;
+		};
+	};
+	mouse_pos Pos;
+} app_mouse_input;
+
+typedef struct
+{
 	union
 	{
 		app_button_state Buttons[6];
@@ -98,6 +120,7 @@ typedef struct
 typedef struct
 {
 	app_controller_input Controller;
+	app_mouse_input MouseController;
 	f32 dt_for_frame;
 } app_input;
 

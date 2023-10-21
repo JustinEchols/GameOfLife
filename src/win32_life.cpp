@@ -13,6 +13,7 @@ global_variable win32_back_buffer	Win32GlobalBackBuffer;
 global_variable LARGE_INTEGER		Win32GlobalTickFrequency;
 global_variable WINDOWPLACEMENT		GlobalWindowPosition = {sizeof(GlobalWindowPosition)};
 
+
 internal void
 win32_toggle_full_screen(HWND WindowHandle)
 {
@@ -127,7 +128,7 @@ WndProc(HWND WindowHandle, UINT Message, WPARAM wParam, LPARAM lParam)
 }
 
 internal void
-win32_process_pending_messgaes(app_controller_input *KeyboardController)
+win32_process_pending_messgaes(app_controller_input *KeyboardController, app_mouse_input *MouseController)
 {
 	MSG Message; 
 	while(PeekMessageA(&Message, 0, 0, 0, PM_REMOVE))
@@ -146,8 +147,10 @@ win32_process_pending_messgaes(app_controller_input *KeyboardController)
 				WPARAM vk_code = Message.wParam;
 				s32 key_was_down = ((Message.lParam & (1 << 30)) != 0);
 				s32 key_is_down = ((Message.lParam & (1 << 31)) == 0);
-				if(key_was_down != key_is_down) {
-					switch(vk_code) {
+				if(key_was_down != key_is_down)
+				{
+					switch(vk_code)
+					{
 						case VK_LBUTTON:
 						{
 						} break;
@@ -216,6 +219,32 @@ win32_process_pending_messgaes(app_controller_input *KeyboardController)
 					}
 				}
 			}
+			case WM_MOUSEMOVE:
+			{
+				MouseController->Pos.x = (Message.lParam & 0xFFFF);
+				MouseController->Pos.y = (Win32GlobalBackBuffer.height - ((Message.lParam & (0xFFFF << 16)) >> 16));
+			} break;
+			case WM_LBUTTONDOWN:
+			{
+				MouseController->Left.ended_down = true;
+				MouseController->Left.half_transition_count++;
+			} break;
+			case WM_LBUTTONUP:
+			{
+				MouseController->Left.ended_down = false;
+				MouseController->Left.half_transition_count++;
+			} break;
+
+			case WM_RBUTTONDOWN:
+			{
+				MouseController->Right.ended_down = true;
+				MouseController->Right.half_transition_count++;
+			} break;
+			case WM_RBUTTONUP:
+			{
+				MouseController->Right.ended_down = false;
+				MouseController->Right.half_transition_count++;
+			} break;
 			default:
 			{
 				TranslateMessage(&Message);
@@ -334,14 +363,14 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 
 			win32_back_buffer_resize(&Win32GlobalBackBuffer, 960, 540);
 
-			app_memory AppMemory = {0};
+			app_memory AppMemory = {};
 			AppMemory.total_size = MEGABYTES(32);
 			AppMemory.permanent_storage = VirtualAlloc((LPVOID)0, AppMemory.total_size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
 
 			if(AppMemory.permanent_storage)
 			{
-				app_input AppInput[2] = {0};
+				app_input AppInput[2] = {};
 				app_input *NewInput = &AppInput[0];
 				app_input *OldInput = &AppInput[1];
 
@@ -355,14 +384,21 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 				//
 				// NOTE(Justin): App loop.
 				//
+
 				f32 seconds_per_frame_actual = 0.0f;
 				while(Win32GlobalRunning)
 				{
 					app_controller_input *NewKeyboardController = &NewInput->Controller;
 					app_controller_input *OldKeyboardController = &OldInput->Controller;
-					app_controller_input ZeroController = {0}; 
+					app_controller_input ZeroController = {}; 
+
+					app_mouse_input *NewMouseController = &NewInput->MouseController;
+					app_mouse_input *OldMouseController = &OldInput->MouseController;
+					app_mouse_input EmptyMouseController = {}; 
 
 					*NewKeyboardController = ZeroController;
+					*NewMouseController = EmptyMouseController;
+					NewMouseController->Pos = OldMouseController->Pos;
 					for(u32 button_index = 0;
 							button_index < ARRAY_COUNT(NewKeyboardController->Buttons);
 								button_index++)
@@ -371,7 +407,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 							OldKeyboardController->Buttons[button_index].ended_down;
 					}
 
-					win32_process_pending_messgaes(NewKeyboardController);
+					for(u32 button_index = 0;
+							button_index < ARRAY_COUNT(NewMouseController->Buttons);
+								button_index++)
+					{
+						NewMouseController->Buttons[button_index].ended_down =
+							OldMouseController->Buttons[button_index].ended_down;
+					}
+
+					win32_process_pending_messgaes(NewKeyboardController, NewMouseController);
 
 
 					back_buffer BackBuffer = {NULL, 0, 0, 0};
@@ -411,7 +455,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 					}
 					else
 					{
-						// Missed frame
+						// NOTE(Justin): Missed frame
 					}
 
 					StretchDIBits(DeviceContext,
