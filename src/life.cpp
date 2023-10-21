@@ -1,7 +1,7 @@
 
 /*
  * Conway's Game of Life Rules:
- *	(1) A cell is alive or dead (rendered white and black, respectively.)
+ *	(1) A cell is alive or dead (rendered black and white, respectively.)
  *
  * If n is the number of alive neighbors of an alive or dead cell, then
  *
@@ -10,8 +10,6 @@
 */
 
 #include "life.h"
-//#include "life_tile.cpp"
-//#include "life_asset.cpp"
 
 internal void 
 rectangle_draw(back_buffer *BackBuffer, v2i Min, v2i Max, f32 r, f32 g, f32 b)
@@ -561,12 +559,32 @@ grid_create_pi_heptomino(grid *Grid, v2i CellPos)
 	grid_cell_state_set(Grid, CellPos + V2I(1, -1), CELL_ALIVE);
 }
 
+internal void
+grid_create_stairstep_hexomino(grid *Grid, v2i CellPos)
+{
+	grid_cell_state_set(Grid, CellPos, CELL_ALIVE);
+	grid_cell_state_set(Grid, CellPos + V2I(0, -1), CELL_ALIVE);
+	//grid_cell_state_set(Grid, CellPos + V2I(-1, 1), CELL_ALIVE);
+	//grid_cell_state_set(Grid, CellPos + V2I(-2, 1), CELL_ALIVE);
+	//grid_cell_state_set(Grid, CellPos + V2I(-2, 2), CELL_ALIVE);
+	//grid_cell_state_set(Grid, CellPos + V2I(-3, 2), CELL_ALIVE);
+
+}
+
 
 internal void
 grid_create_gosper_glider_gun(grid *Grid, v2i CellPos)
 {
-
 }
+
+#define CELL_ALIVE_CODE 79
+#define CELL_DEAD_CODE 46
+
+internal cell_file
+cell_file_read_entire(char *name)
+{
+}
+
 
 internal void
 update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *AppInput)
@@ -576,6 +594,8 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 	if(!AppMemory->is_initialized)
 	{
 		grid *Grid = &AppState->Grid;
+
+		debug_file_read CellFile = platform_file_read_entire("1beacon.cells");
 
 		Grid->CellDim = {4, 4};
 		Grid->cell_total_count_x = BackBuffer->width / Grid->CellDim.x; 
@@ -610,14 +630,36 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		Pos = GridMiddle + 4 * Offset;
 		grid_create_glider(Grid, Pos);
 
+		Offset = V2I(0, -50);
+		Pos = GridMiddle + Offset;
+		grid_create_stairstep_hexomino(Grid, Pos);
+
+
 		AppMemory->is_initialized = true;
 	}
+
+	//
+	// NOTE(Justin): Render
+	//
+	
 
 	grid *Grid = &AppState->Grid;
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
 		{
+			if((cell_x % 10 == 0) || (cell_y % 10 == 0))
+			{
+				line_vertical_draw(BackBuffer, (f32)(cell_x * Grid->CellDim.x), 0.0f, 0.0f, 0.0f);
+				line_horizontal_draw(BackBuffer, (f32)(cell_y * Grid->CellDim.x), 0.0f, 0.0f, 0.0f);
+			}
+			else
+			{
+				line_vertical_draw(BackBuffer, (f32)(cell_x * Grid->CellDim.x), 0.5f, 0.5f, 0.5f);
+				line_horizontal_draw(BackBuffer, (f32)(cell_y * Grid->CellDim.x), 0.5f, 0.5f, 0.5f);
+			}
+
+
 			v2i CellPos = V2I(cell_x, cell_y);
 			u32 cell_state = grid_cell_state_get(Grid, CellPos);
 			u32 neighbor_count = cell_get_neighbor_count(Grid, CellPos);
@@ -630,11 +672,12 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 
 			if(cell_state == CELL_ALIVE)
 			{	
-				rectangle_draw(BackBuffer, Min, Max, 1.0f, 1.0f, 1.0f);
+
+				rectangle_draw(BackBuffer, Min, Max, 0.0f, 0.0f, 0.0f);
 			}
 			else
 			{
-				rectangle_draw(BackBuffer, Min, Max, 0.0f, 0.0f, 0.0f);
+				rectangle_draw(BackBuffer, Min, Max, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}
@@ -649,7 +692,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 	// using the state change we calculated and stored into the buffer.
 
 
-	// NOTE(Justin): Calculate and store the new state in the buffer.
+	// NOTE(Justin): For each cell, calculate and store the new state in the state buffer.
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
@@ -678,8 +721,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		}
 	}
 
-
-	// NOTE(Justin): Copy the cell states from the buffer to the grid memory arena.
+	// NOTE(Justin): For each cell, copy state from the state buffer to the grid memory arena.
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
@@ -695,10 +737,10 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		int mouse_x = AppInput->MouseController.Pos.x;
 		int mouse_y = AppInput->MouseController.Pos.y;
 
-		v2i Offset = V2I(10, 10);
+		v2i OffsetInPixels = Grid->CellDim;
 		v2i Min = V2I(mouse_x, mouse_y);
-		v2i Max = Min + V2I(10, 10);
-		Min = Min + -0.5f * Offset;
+		v2i Max = Min + OffsetInPixels;
+		Min = Min + -0.5f * OffsetInPixels;
 
 		rectangle_draw(BackBuffer, Min, Max, 1.0f, 0.0f, 0.0f);
 	}
@@ -707,10 +749,10 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		int mouse_x = AppInput->MouseController.Pos.x;
 		int mouse_y = AppInput->MouseController.Pos.y;
 
-		v2i Offset = V2I(10, 10);
+		v2i OffsetInPixels = Grid->CellDim;
 		v2i Min = V2I(mouse_x, mouse_y);
-		v2i Max = Min + V2I(10, 10);
-		Min = Min + -0.5f * Offset;
+		v2i Max = Min + OffsetInPixels;
+		Min = Min + -0.5f * OffsetInPixels;
 
 		rectangle_draw(BackBuffer, Min, Max, 1.0f, 1.0f, 0.0f);
 	}
