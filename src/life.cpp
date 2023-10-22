@@ -9,26 +9,50 @@
  *	(3) If dead and n = 3 it comes to life.
 */
 
+/*
+ * TODO(Justin):
+ * Multi threading
+ * SIMD
+ * Cell update list?
+ * Acive Region?
+ * Cell File I/O
+ *
+ *
+ *
+*/
+
 #include "life.h"
 
 internal void 
 rectangle_draw(back_buffer *BackBuffer, v2i Min, v2i Max, f32 r, f32 g, f32 b)
 {
+	__m128 ValueA = _mm_set1_ps(1.0f);
+	__m128 ValueB = _mm_set1_ps(2.0f);
+	__m128 Sum1 = _mm_add_ps(ValueA, ValueB);
+
+	//__m128 ValueC = _mm_set1_ps(1.0f);
+	//__m128 ValueD = _mm_set1_ps(2.0f);
+	//__m128 Sum2 = _mm_add_ps(ValueA, ValueB);
+
 	s32 x_min = Min.x;
 	s32 y_min = Min.y;
 	s32 x_max = Max.x;
 	s32 y_max = Max.y;
 
-	if (x_min < 0) {
+	if(x_min < 0)
+	{
 		x_min += BackBuffer->width;
 	}
-	if (x_max > BackBuffer->width) {
+	if(x_max > BackBuffer->width)
+	{
 		x_max -= BackBuffer->width;
 	}
-	if (y_min < 0) {
+	if(y_min < 0)
+	{
 		y_min += BackBuffer->height;
 	}
-	if (y_max > BackBuffer->height) {
+	if(y_max > BackBuffer->height)
+	{
 		y_max -= BackBuffer->height;
 	}
 
@@ -38,9 +62,11 @@ rectangle_draw(back_buffer *BackBuffer, v2i Min, v2i Max, f32 r, f32 g, f32 b)
 	u32 color = ((red << 16) | (green << 8) | (blue << 0));
 
 	u8 *pixel_row = (u8 *)BackBuffer->memory + BackBuffer->stride * y_min + BackBuffer->bytes_per_pixel * x_min ;
-	for (int row = y_min; row < y_max; row++) {
+	for(int row = y_min; row < y_max; row++)
+	{
 		u32 *pixel = (u32 *)pixel_row;
-		for (int col = x_min; col < x_max; col++)  {
+		for(int col = x_min; col < x_max; col++)
+		{
 			*pixel++ = color;
 		}
 		pixel_row += BackBuffer->stride;
@@ -53,16 +79,20 @@ pixel_set(back_buffer *BackBuffer, v2f ScreenXY, u32 color)
 	s32 screen_x = f32_round_to_s32(ScreenXY.x);
 	s32 screen_y = f32_round_to_s32(ScreenXY.y);
 
-	if (screen_x >= BackBuffer->width) {
+	if(screen_x >= BackBuffer->width)
+	{
 		screen_x = screen_x - BackBuffer->width;
 	}
-	if (screen_x < 0) { 
+	if(screen_x < 0)
+	{ 
 		screen_x = screen_x + BackBuffer->width;
 	}
-	if (screen_y >= BackBuffer->height) {
+	if(screen_y >= BackBuffer->height)
+	{
 		screen_y = screen_y - BackBuffer->height;
 	}
-	if (screen_y < 0) {
+	if(screen_y < 0)
+	{
 		screen_y = screen_y + BackBuffer->height;
 	}
 	u8 *start = (u8 *)BackBuffer->memory + BackBuffer->stride * screen_y + BackBuffer->bytes_per_pixel * screen_x;
@@ -70,39 +100,12 @@ pixel_set(back_buffer *BackBuffer, v2f ScreenXY, u32 color)
 	*pixel = color;
 }
 
-internal void
-line_dda_draw(back_buffer *BackBuffer, v2f P1, v2f P2, f32 r, f32 g, f32 b)
-{
-	u32 step_count;
-
-	v2f Pos = P1;
-
-	v2f Delta = P2 - P1;
-
-	if (ABS(Delta.x) > ABS(Delta.y)) {
-		step_count = (u32)ABS(Delta.x);
-	} else {
-		step_count = (u32)ABS(Delta.y);
-	}
-
-	u32 red = f32_round_to_u32(255.0f * r);
-	u32 green = f32_round_to_u32(255.0f * g);
-	u32 blue = f32_round_to_u32(255.0f * b);
-	u32 color = ((red << 16) | (green << 8) | (blue << 0));
-
-	v2f Step = (1.0f / (f32)step_count) * Delta;
-	for (u32 k = 0; k < step_count; k++) {
-		Pos += Step;
-		pixel_set(BackBuffer, Pos, color);
-	}
-}
-
-
 internal u32
 str_length(char *str)
 {
 	u32 Result = 0;
-	for (char *c = str; *c != '\0'; c++) {
+	for(char *c = str; *c != '\0'; c++)
+	{
 		Result++;
 	}
 	return(Result);
@@ -121,16 +124,21 @@ str_are_same(char *str1, char *str2)
 
 	u32 str1_length = str_length(str1);
 	u32 str2_length = str_length(str2);
-	if (str1_length == str2_length) {
+	if(str1_length == str2_length)
+	{
 		char *c1 = str1;
 		char *c2 = str2;
-		for (u32 char_index = 0; char_index < str1_length; char_index++) {
-			if (*c1++ != *c2++) {
+		for(u32 char_index = 0; char_index < str1_length; char_index++)
+		{
+			if(*c1++ != *c2++)
+			{
 				Result = 0;
 				break;
 			}
 		}
-	} else {
+	}
+	else
+	{
 		Result = 0;
 	}
 	return(Result);
@@ -141,7 +149,8 @@ str_u8(char *str)
 {
 	string_u8 Result;
 	Result.data = (u8 *)str;
-	for (char *c = str; *c != '\0'; c++) {
+	for(char *c = str; *c != '\0'; c++)
+	{
 		Result.length++;
 	}
 	return(Result);
@@ -152,13 +161,23 @@ line_vertical_draw(back_buffer *BackBuffer, f32 x, f32 r, f32 g, f32 b)
 {
 	s32 x_col = f32_round_to_s32(x);
 
+	if(x_col < 0)
+	{
+		x_col = 0;
+	}
+	if(x_col >= BackBuffer->width)
+	{
+		x_col = BackBuffer->width - 1;
+	}
+
 	u32 red = f32_round_to_u32(255.0f * r);
 	u32 green = f32_round_to_u32(255.0f * g);
 	u32 blue = f32_round_to_u32(255.0f * b);
 	u32 color = ((red << 16) | (green << 8) | (blue << 0));
 
 	u8 *pixel_row = (u8 *)BackBuffer->memory + x_col * BackBuffer->bytes_per_pixel;
-	for (s32 y = 0; y < BackBuffer->height; y++) {
+	for(s32 y = 0; y < BackBuffer->height; y++)
+	{
 		u32 *pixel = (u32 *)pixel_row;
 		*pixel = color;
 		pixel_row += BackBuffer->stride;
@@ -170,6 +189,15 @@ line_horizontal_draw(back_buffer *BackBuffer, f32 y, f32 r, f32 g, f32 b)
 {
 	s32 y_row = f32_round_to_s32(y);
 
+	if(y_row < 0)
+	{
+		y_row = 0;
+	}
+	if(y_row >= BackBuffer->height)
+	{
+		y_row = BackBuffer->height - 1;
+	}
+
 	u32 red = f32_round_to_u32(255.0f * r);
 	u32 green = f32_round_to_u32(255.0f * g);
 	u32 blue = f32_round_to_u32(255.0f * b);
@@ -177,7 +205,8 @@ line_horizontal_draw(back_buffer *BackBuffer, f32 y, f32 r, f32 g, f32 b)
 
 	u8 *pixel_row = (u8 *)BackBuffer->memory + y_row * BackBuffer->stride;
 	u32 *pixel = (u32 *)pixel_row;
-	for (s32 x = 0; x < BackBuffer->width; x++) {
+	for(s32 x = 0; x < BackBuffer->width; x++)
+	{
 		*pixel++ = color;
 	}
 }
@@ -212,16 +241,20 @@ rectangle_transparent_draw(back_buffer *BackBuffer, v2f Min, v2f Max, f32 r, f32
 	s32 y_max = f32_round_to_s32(Max.y);
 
 	// Check bounds
-	if (x_min < 0) {
+	if(x_min < 0)
+	{
 		x_min = 0;
 	}
-	if (x_max > BackBuffer->width) {
+	if(x_max > BackBuffer->width)
+	{
 		x_max = BackBuffer->width;
 	}
-	if (y_min < 0) {
+	if(y_min < 0)
+	{
 		y_min = 0;
 	}
-	if (y_max > BackBuffer->height) {
+	if(y_max > BackBuffer->height)
+	{
 		y_max = BackBuffer->height;
 	}
 
@@ -231,11 +264,11 @@ rectangle_transparent_draw(back_buffer *BackBuffer, v2f Min, v2f Max, f32 r, f32
 	u32 color = ((red << 16) | (green << 8) | (blue << 0));
 
 	u8 *pixel_row = (u8 *)BackBuffer->memory + BackBuffer->stride * y_min + BackBuffer->bytes_per_pixel * x_min;
-	for (int row = y_min; row < y_max; row++) {
-
+	for(int row = y_min; row < y_max; row++)
+	{
 		u32 *pixel = (u32 *)pixel_row;
-		for (int col = x_min; col < x_max; col++)  {
-
+		for(int col = x_min; col < x_max; col++)
+		{
 			*pixel++ = colors_alpha_blend(*pixel, color, alpha);
 		}
 		pixel_row += BackBuffer->stride;
@@ -251,9 +284,6 @@ grid_cell_state_set(grid *Grid, v2i CellPos, u32 state)
 		Grid->cell_states[CellPos.y * Grid->cell_total_count_x + CellPos.x] = state;
 	}
 }
-
-
-
 
 internal u32
 grid_cell_state_get(grid *Grid, v2i CellPos)
@@ -307,7 +337,7 @@ cell_get_neighbor_count(grid *Grid, v2i CellPos)
 			Result += grid_cell_state_get(Grid, CellPos + V2I(1, 1));
 			Result += grid_cell_state_get(Grid, CellPos + V2I(1, 0));
 		}
-		else if ((CellPos.y + 1) == Grid->cell_total_count_y)
+		else if((CellPos.y + 1) == Grid->cell_total_count_y)
 		{
 			Result += grid_cell_state_get(Grid, CellPos + V2I(0, -1));
 			Result += grid_cell_state_get(Grid, CellPos + V2I(1, -1));
@@ -330,7 +360,7 @@ cell_get_neighbor_count(grid *Grid, v2i CellPos)
 			Result += grid_cell_state_get(Grid, CellPos + V2I(-1, 1));
 			Result += grid_cell_state_get(Grid, CellPos + V2I(-1, 0));
 		}
-		else if ((CellPos.y + 1) == Grid->cell_total_count_y)
+		else if((CellPos.y + 1) == Grid->cell_total_count_y)
 		{
 			Result += grid_cell_state_get(Grid, CellPos + V2I(0, -1));
 			Result += grid_cell_state_get(Grid, CellPos + V2I(-1, -1));
@@ -562,13 +592,6 @@ grid_create_pi_heptomino(grid *Grid, v2i CellPos)
 internal void
 grid_create_stairstep_hexomino(grid *Grid, v2i CellPos)
 {
-	grid_cell_state_set(Grid, CellPos, CELL_ALIVE);
-	grid_cell_state_set(Grid, CellPos + V2I(0, -1), CELL_ALIVE);
-	//grid_cell_state_set(Grid, CellPos + V2I(-1, 1), CELL_ALIVE);
-	//grid_cell_state_set(Grid, CellPos + V2I(-2, 1), CELL_ALIVE);
-	//grid_cell_state_set(Grid, CellPos + V2I(-2, 2), CELL_ALIVE);
-	//grid_cell_state_set(Grid, CellPos + V2I(-3, 2), CELL_ALIVE);
-
 }
 
 
@@ -577,18 +600,13 @@ grid_create_gosper_glider_gun(grid *Grid, v2i CellPos)
 {
 }
 
-#define CELL_ALIVE_CODE 79
-#define CELL_DEAD_CODE 46
-
-internal cell_file
-cell_file_read_entire(char *name)
-{
-}
-
 
 internal void
 update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *AppInput)
 {
+
+	BEGIN_TIMED_BLOCK(update_and_render);
+
 	ASSERT(sizeof(app_state) <= AppMemory->total_size);
 	app_state *AppState = (app_state *)AppMemory->permanent_storage;
 	if(!AppMemory->is_initialized)
@@ -650,13 +668,13 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		{
 			if((cell_x % 10 == 0) || (cell_y % 10 == 0))
 			{
-				line_vertical_draw(BackBuffer, (f32)(cell_x * Grid->CellDim.x), 0.0f, 0.0f, 0.0f);
-				line_horizontal_draw(BackBuffer, (f32)(cell_y * Grid->CellDim.x), 0.0f, 0.0f, 0.0f);
+				line_vertical_draw(BackBuffer, (f32)(cell_x * (Grid->CellDim.x)), 0.0f, 0.0f, 0.0f);
+				line_horizontal_draw(BackBuffer, (f32)(cell_y * (Grid->CellDim.y)), 0.0f, 0.0f, 0.0f);
 			}
 			else
 			{
-				line_vertical_draw(BackBuffer, (f32)(cell_x * Grid->CellDim.x), 0.5f, 0.5f, 0.5f);
-				line_horizontal_draw(BackBuffer, (f32)(cell_y * Grid->CellDim.x), 0.5f, 0.5f, 0.5f);
+				line_vertical_draw(BackBuffer, (f32)(cell_x * (Grid->CellDim.x)), 0.5f, 0.5f, 0.5f);
+				line_horizontal_draw(BackBuffer, (f32)(cell_y * (Grid->CellDim.y)), 0.5f, 0.5f, 0.5f);
 			}
 
 
@@ -693,6 +711,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 
 
 	// NOTE(Justin): For each cell, calculate and store the new state in the state buffer.
+	BEGIN_TIMED_BLOCK(render_grid);
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
@@ -720,6 +739,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 			}
 		}
 	}
+	END_TIMED_BLOCK(render_grid);
 
 	// NOTE(Justin): For each cell, copy state from the state buffer to the grid memory arena.
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
@@ -757,4 +777,5 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 		rectangle_draw(BackBuffer, Min, Max, 1.0f, 1.0f, 0.0f);
 	}
 
+	END_TIMED_BLOCK(update_and_render);
 }
