@@ -62,12 +62,15 @@ internal debug_file_read platform_file_read_entire(char *filename);
 typedef struct
 {
 	u64 cycle_count;
+	u32 call_count;
 } debug_cycle_counter; 
 
 enum
 {
 	DEBUG_CYCLE_COUNTER_update_and_render,
 	DEBUG_CYCLE_COUNTER_render_grid,
+	DEBUG_CYCLE_COUNTER_cell_update,
+	DEBUG_CYCLE_COUNTER_copy_cell_state,
 	DEBUG_CYCLE_COUNTER_COUNT
 };
 
@@ -76,7 +79,7 @@ enum
 
 #if _MSC_VER
 #define BEGIN_TIMED_BLOCK(id) u64 cycle_count_start##id = __rdtsc();
-#define END_TIMED_BLOCK(id) AppMemory->Counters[DEBUG_CYCLE_COUNTER_##id].cycle_count += __rdtsc() - cycle_count_start##id;
+#define END_TIMED_BLOCK(id) AppMemory->Counters[DEBUG_CYCLE_COUNTER_##id].cycle_count += __rdtsc() - cycle_count_start##id; ++AppMemory->Counters[DEBUG_CYCLE_COUNTER_##id].call_count;
 #else
 #define BEGIN_TIMED_BLOCK(id) 
 #define END_TIMED_BLOCK(id) 
