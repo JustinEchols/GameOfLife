@@ -1,6 +1,7 @@
 @echo off
 
-set common_compiler_flags= -MTd -nologo -Gm- -GR- -EHa- -Od -Oi -WX -W4 -FC -Z7 -wd4201 -wd4100 -wd4189 -wd4505 -DGAME_SLOW=1 -DDEBUG_BOUNDING_BOX=1 -DDEBUG_VERTICES=1 -DDEBUG_TILE_MAP=1
+set src_filename=win32_life
+set common_compiler_flags= -MTd -nologo -Gm- -GR- -EHa- -O2 -Oi -WX -W4 -FC -Z7 -wd4201 -wd4100 -wd4189 -wd4505 -DGAME_SLOW=1 -DDEBUG_BOUNDING_BOX=1 -DDEBUG_VERTICES=1 -DDEBUG_TILE_MAP=1 -DAPP_INTERNAL=1
 set common_linker_flags= -incremental:no -opt:ref user32.lib gdi32.lib winmm.lib
 
 IF NOT EXIST ..\build mkdir ..\build
@@ -8,7 +9,7 @@ pushd ..\build
 REM 64-bit build
 del *.pdb > NUL 2> NUL
 REM cl %common_compiler_flags% ..\src\game.cpp -Fgame.map /LD /link -incremental:no -opt:ref /PDB:game%random%.pdb /EXPORT:update_and_render
-cl %common_compiler_flags% ..\src\win32_life.cpp -Fmwin32_game.map /link %common_linker_flags%
+cl %common_compiler_flags% ..\src\%src_filename%.cpp -Fm%src_filename%.map /link %common_linker_flags%
 
 
 REM ---------------------------COMPILER FLAGS------------------------------
