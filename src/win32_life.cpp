@@ -1,12 +1,13 @@
 #include <windows.h>
+#include <xmmintrin.h>
 #include <stdio.h>
 #include <malloc.h>
-#include <dsound.h>
 
 #include <math.h>
 
-#include "life.cpp"
+
 #include "win32_life.h"
+#include "life.cpp"
 
 global_variable b32					Win32GlobalRunning;
 global_variable win32_back_buffer	Win32GlobalBackBuffer;
@@ -77,9 +78,25 @@ win32_back_buffer_resize(win32_back_buffer *Win32GlobalBackBuffer, int width, in
 LRESULT CALLBACK
 WndProc(HWND WindowHandle, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT result = 0;
+	LRESULT Result = 0;
 	switch(Message)
 	{
+		case WM_CREATE:
+		{
+			HMENU MenuBarHandle = CreateMenu();
+			HMENU File = CreateMenu();
+			HMENU Start = CreateMenu();
+			HMENU Stop = CreateMenu();
+			HMENU Step = CreateMenu();
+
+			AppendMenu(MenuBarHandle, MF_POPUP, NULL, "File");
+			AppendMenu(MenuBarHandle, MF_POPUP, NULL, "Start");
+			AppendMenu(MenuBarHandle, MF_POPUP, NULL, "Stop");
+			AppendMenu(MenuBarHandle, MF_POPUP, NULL, "Step");
+
+			SetMenu(WindowHandle, MenuBarHandle);
+
+		} break;
 		case WM_CLOSE:
 		{
 			Win32GlobalRunning = FALSE;
@@ -121,10 +138,10 @@ WndProc(HWND WindowHandle, UINT Message, WPARAM wParam, LPARAM lParam)
 		} break;
 		default:
 		{
-			result = DefWindowProc(WindowHandle, Message, wParam, lParam);
+			Result = DefWindowProc(WindowHandle, Message, wParam, lParam);
 		} break;
 	}
-	return(result);
+	return(Result);
 }
 
 internal void
@@ -260,6 +277,27 @@ win32_get_wall_clock(void)
 	LARGE_INTEGER Result;
 	QueryPerformanceCounter(&Result);
 	return(Result);
+}
+
+internal void
+debug_cycle_counters_process(app_memory *AppMemory)
+{
+#if APP_INTERNAL
+	// # cycles for update_and_render ~426,678,064
+	// not including windows code.
+	OutputDebugStringA("DEBUG CYCLE COUNTERS\n");
+	for(u32 counter_index = 0;
+			counter_index < ARRAY_COUNT(AppMemory->Counters);
+				counter_index++)
+	{
+		debug_cycle_counter *Counter = AppMemory->Counters + counter_index;
+		char textbuffer[256];
+		_snprintf_s(textbuffer, sizeof(textbuffer),
+				"%d %I64u\n", counter_index, Counter->cycle_count);
+		OutputDebugStringA(textbuffer);
+		Counter->cycle_count = 0;
+	}
+#endif
 }
 
 
@@ -436,7 +474,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 					BackBuffer.bytes_per_pixel = Win32GlobalBackBuffer.bytes_per_pixel;
 					BackBuffer.stride = Win32GlobalBackBuffer.stride;
 
+
 					update_and_render(&AppMemory, &BackBuffer, NewInput);
+					debug_cycle_counters_process(&AppMemory);
 
 					u64 cycle_count_end = __rdtsc();
 
@@ -480,10 +520,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR CmdLine, int nCmdSho
 					f32 miliseconds_elapsed = (((1000 * (f32)ticks_elapsed) * time_for_each_tick));
 					f32 megacycles_per_frame = (f32)(cycles_elapsed / (1000.0f * 1000.0f));
 
+#if 0
 					char textbuffer[256];
-					sprintf_s(textbuffer, sizeof(textbuffer),
-							"%0.2fms/f %0.2ff/s %0.2fMc/f\n", miliseconds_elapsed, fps, megacycles_per_frame);
-
+					_snprintf_s(textbuffer, sizeof(textbuffer),
+							"%0.2f ms/f %0.2f fps %0.2f Mc/f\n", miliseconds_elapsed, fps, megacycles_per_frame);
+					OutputDebugStringA(textbuffer);
+#endif
 					tick_count_last = tick_count_end;
 					cycle_count_last = cycle_count_end;
 
