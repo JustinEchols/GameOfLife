@@ -3,7 +3,6 @@
 // Header file that interfaces between win32 and app layers.
 // Contains services that the app provides to the platform layer.
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,6 +48,8 @@ typedef float		f32;
 #define SQUARE(x) ((x) * (x))
 #define CUBE(x) ((x) * (x) * (x))
 
+
+#if APP_INTERNAL
 typedef struct
 {
 	void *contents;
@@ -57,6 +58,33 @@ typedef struct
 
 internal void platform_file_free_memory(void *file_memory);
 internal debug_file_read platform_file_read_entire(char *filename);
+
+typedef struct
+{
+	u64 cycle_count;
+} debug_cycle_counter; 
+
+enum
+{
+	DEBUG_CYCLE_COUNTER_update_and_render,
+	DEBUG_CYCLE_COUNTER_render_grid,
+	DEBUG_CYCLE_COUNTER_COUNT
+};
+
+
+//extern struct app_memory *DebugGlobalMemory;
+
+#if _MSC_VER
+#define BEGIN_TIMED_BLOCK(id) u64 cycle_count_start##id = __rdtsc();
+#define END_TIMED_BLOCK(id) AppMemory->Counters[DEBUG_CYCLE_COUNTER_##id].cycle_count += __rdtsc() - cycle_count_start##id;
+#else
+#define BEGIN_TIMED_BLOCK(id) 
+#define END_TIMED_BLOCK(id) 
+#endif
+
+
+
+#endif
 
 typedef struct
 {
@@ -79,7 +107,6 @@ typedef struct
 	int x;
 	int y;
 } mouse_pos;
-
 
 // TODO(Justin): Use u8 and bitwise ops to keep track of and update button states.
 typedef struct
@@ -115,8 +142,6 @@ typedef struct
 	};
 } app_controller_input;
 
-
-
 typedef struct
 {
 	app_controller_input Controller;
@@ -130,6 +155,9 @@ typedef struct
 	b32 is_initialized;
 	void *permanent_storage;
 
+#if APP_INTERNAL
+	debug_cycle_counter Counters[DEBUG_CYCLE_COUNTER_COUNT];
+#endif
 } app_memory;
 
 #ifdef __cplusplus
