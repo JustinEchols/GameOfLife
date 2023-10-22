@@ -662,6 +662,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 	
 
 	grid *Grid = &AppState->Grid;
+	BEGIN_TIMED_BLOCK(render_grid);
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
@@ -699,6 +700,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 			}
 		}
 	}
+	END_TIMED_BLOCK(render_grid);
 
 	// NOTE(Justin): We have to determine for each cell its state change
 	// before updating any one of the cells. If we change the state of
@@ -711,7 +713,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 
 
 	// NOTE(Justin): For each cell, calculate and store the new state in the state buffer.
-	BEGIN_TIMED_BLOCK(render_grid);
+
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
 	{
 		for(s32 cell_x = 0; cell_x < Grid->cell_total_count_x; cell_x++)
@@ -739,7 +741,7 @@ update_and_render(app_memory *AppMemory, back_buffer *BackBuffer, app_input *App
 			}
 		}
 	}
-	END_TIMED_BLOCK(render_grid);
+
 
 	// NOTE(Justin): For each cell, copy state from the state buffer to the grid memory arena.
 	for(s32 cell_y = 0; cell_y < Grid->cell_total_count_y; cell_y++)
