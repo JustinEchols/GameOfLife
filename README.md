@@ -15,4 +15,4 @@ game\_of\_life\src> ..\build\win32\_life.exe
 
 
 ## TEST
-![](https://github.com/JustinEchols/game_of_life/tree/main/media/cloning/life_git.gif)
+!(https://github.com/JustinEchols/game_of_life/tree/main/media/cloning/life_git.gif)
