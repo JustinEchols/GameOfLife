@@ -10,6 +10,7 @@ REM 64-bit build
 del *.pdb > NUL 2> NUL
 REM cl %common_compiler_flags% ..\src\game.cpp -Fgame.map /LD /link -incremental:no -opt:ref /PDB:game%random%.pdb /EXPORT:update_and_render
 cl %common_compiler_flags% ..\src\%src_filename%.cpp -Fm%src_filename%.map /link %common_linker_flags%
+popd
 
 
 REM ---------------------------COMPILER FLAGS------------------------------
