@@ -1,7 +1,7 @@
 # Conway's Game Of Life
 
 ## Cloning
-> git clone git@github.com:JustinEchols/game\_of\_life.git
+\> git clone git@github.com:JustinEchols/game\_of\_life.git
 
 ## Compiling
 To compile, change directory to the src directory , enable the MSVC command line tools by calling shell.bat, then run build.bat. 
@@ -9,6 +9,10 @@ To compile, change directory to the src directory , enable the MSVC command line
 game\_of\_life\src> ..\misc\shell.bat
 
 game\_of\_life\src> build.bat
+
+## Running
+game\_of\_life\src> ..\build\win32\_life.exe
+
 
 ## TEST
 ![](https://github.com/JustinEchols/game_of_life/tree/main/media/cloning/life_git.gif)
