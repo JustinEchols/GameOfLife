@@ -15,3 +15,6 @@ game\_of\_life\src> ..\build\win32\_life.exe
 
 ##
 ![life_git](https://github.com/JustinEchols/game_of_life/assets/41530080/c634fc62-fafb-454b-93c3-d6fc870bfccf)
+
+## Resources
+https://conwaylife.com/book/
