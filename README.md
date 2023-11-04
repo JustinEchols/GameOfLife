@@ -11,5 +11,4 @@ game\_of\_life\src> ..\misc\shell.bat
 game\_of\_life\src> build.bat
 
 ## TEST
-
 ![](https://github.com/JustinEchols/game_of_life/tree/main/media/cloning/life_git.gif)
