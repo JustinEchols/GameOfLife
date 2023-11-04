@@ -13,6 +13,5 @@ game\_of\_life\src> build.bat
 ## Running
 game\_of\_life\src> ..\build\win32\_life.exe
 
-
-## TEST
-!(https://github.com/JustinEchols/game_of_life/tree/main/media/cloning/life_git.gif)
+##
+![life_git](https://github.com/JustinEchols/game_of_life/assets/41530080/c634fc62-fafb-454b-93c3-d6fc870bfccf)
