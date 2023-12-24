@@ -1,4 +1,4 @@
-# Conway's Game Of Life
+# GameOfLife
 
 ## Cloning
 \> git clone git@github.com:JustinEchols/game\_of\_life.git
